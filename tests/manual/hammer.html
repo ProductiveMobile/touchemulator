@@ -33,7 +33,10 @@
     <script> TouchEmulator(); </script>
 </head>
 <body>
-
+<div>
+    <button id="disable">Disable</button>
+    <button id="enable">Enable</button>
+</div>
 <div id="log"></div>
 <div id="hit" style="background: #42d692; width: 150px; height: 150px;"></div>
 
@@ -203,6 +206,13 @@
 
     resetElement();
 
+    document.querySelector('#disable').addEventListener('click', function() {
+        TouchEmulator.disable();
+    }, false);
+
+    document.querySelector('#enable').addEventListener('click', function() {
+        TouchEmulator();
+    }, false);
 </script>
 </body>
 </html>

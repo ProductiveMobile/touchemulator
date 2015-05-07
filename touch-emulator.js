@@ -5,6 +5,9 @@
     var multiTouchStartPos;
     var eventTarget;
     var touchElements = {};
+    var touchStartHandler;
+    var touchMoveHandler;
+    var touchEndHandler;
 
     // polyfills
     if(!document.createTouch) {
@@ -100,6 +103,25 @@
     }
 
     /**
+     * Removes fake touch support trick
+     */
+    function removeFakeTouchSupport() {
+        var objs = [window, document.documentElement];
+        var props = ['ontouchstart', 'ontouchmove', 'ontouchcancel', 'ontouchend'];
+
+        for(var o=0; o<objs.length; o++) {
+            for(var p=0; p<props.length; p++) {
+                if(objs[o] && objs[o][props[p]] == null) {
+                    objs[o][props[p]] = undefined;
+                    try {
+                        delete objs[o][props[p]];
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    /**
      * we don't have to emulate on a touch device
      * @returns {boolean}
      */
@@ -125,8 +147,10 @@
      */
     function onMouse(touchType) {
         return function(ev) {
-            // prevent mouse events
-            preventMouseEvents(ev);
+            if (TouchEmulator.ignoreTags.indexOf(ev.target.tagName) < 0) {
+                // prevent mouse events
+                preventMouseEvents(ev);
+            }
 
             if (ev.which !== 1) {
                 return;
@@ -297,9 +321,13 @@
 
         fakeTouchSupport();
 
-        window.addEventListener("mousedown", onMouse('touchstart'), true);
-        window.addEventListener("mousemove", onMouse('touchmove'), true);
-        window.addEventListener("mouseup", onMouse('touchend'), true);
+        touchStartHandler = onMouse('touchstart');
+        touchMoveHandler = onMouse('touchmove');
+        touchEndHandler = onMouse('touchend');
+
+        window.addEventListener("mousedown", touchStartHandler, true);
+        window.addEventListener("mousemove", touchMoveHandler, true);
+        window.addEventListener("mouseup", touchEndHandler, true);
 
         window.addEventListener("mouseenter", preventMouseEvents, true);
         window.addEventListener("mouseleave", preventMouseEvents, true);
@@ -313,8 +341,30 @@
         window.addEventListener("touchcancel", showTouches, false);
     }
 
+    // disables touch emulator
+    TouchEmulator.disable = function() {
+        removeFakeTouchSupport();
+
+        window.removeEventListener("mousedown", touchStartHandler, true);
+        window.removeEventListener("mousemove", touchMoveHandler, true);
+        window.removeEventListener("mouseup", touchEndHandler, true);
+
+        window.removeEventListener("mouseenter", preventMouseEvents, true);
+        window.removeEventListener("mouseleave", preventMouseEvents, true);
+        window.removeEventListener("mouseout", preventMouseEvents, true);
+        window.removeEventListener("mouseover", preventMouseEvents, true);
+
+        window.removeEventListener("touchstart", showTouches, false);
+        window.removeEventListener("touchmove", showTouches, false);
+        window.removeEventListener("touchend", showTouches, false);
+        window.removeEventListener("touchcancel", showTouches, false);
+    };
+
     // start distance when entering the multitouch mode
     TouchEmulator.multiTouchOffset = 75;
+
+    // tags that shouldn't swallow mouse events
+    TouchEmulator.ignoreTags = ['TEXTAREA', 'INPUT', 'SELECT'];
 
     /**
      * css template for the touch rendering
