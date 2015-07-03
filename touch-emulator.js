@@ -277,6 +277,18 @@
         return touchList;
     }
 
+
+    function hideTouches(ev) {
+      var keys = Object.keys(touchElements);
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var el = touchElements[id];
+        el.parentNode.removeChild(el);
+        delete touchElements[id];
+      }
+    }
+
+
     /**
      * show the touchpoints on the screen
      */
@@ -329,6 +341,13 @@
         window.addEventListener("mousemove", touchMoveHandler, true);
         window.addEventListener("mouseup", touchEndHandler, true);
 
+
+        window.addEventListener(
+          'mouseout',
+          hideTouches,
+          true
+        );
+
         window.addEventListener("mouseenter", preventMouseEvents, true);
         window.addEventListener("mouseleave", preventMouseEvents, true);
         window.addEventListener("mouseout", preventMouseEvents, true);
@@ -344,10 +363,17 @@
     // disables touch emulator
     TouchEmulator.disable = function() {
         removeFakeTouchSupport();
+        hideTouches();
 
         window.removeEventListener("mousedown", touchStartHandler, true);
         window.removeEventListener("mousemove", touchMoveHandler, true);
         window.removeEventListener("mouseup", touchEndHandler, true);
+
+        window.removeEventListener(
+          'mouseout',
+          hideTouches,
+          true
+        );
 
         window.removeEventListener("mouseenter", preventMouseEvents, true);
         window.removeEventListener("mouseleave", preventMouseEvents, true);
